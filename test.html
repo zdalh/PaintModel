@@ -1,0 +1,108 @@
+<html>
+	<head>
+		<link type="text/css" rel="StyleSheet" href="bootstrap.css" />
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<canvas id='cvsMain' width='500px' height='300px' style='background-size:contain;background-repeat:no-repeat; width:500px; height:300px;'> <!-- background-color:#ccc; -->
+					
+				</canvas>
+			</div>
+			<div class="row">
+				<div class="btn-group">
+					<button type="button" class="btn btn-default btn-chooseShape">选择</button> 
+					<button type="button" class="btn btn-default btn-chooseShape">StraightLine</button> 
+					<button type="button" class="btn btn-default btn-chooseShape">Rect</button>
+					<button type="button" class="btn btn-default btn-chooseShape">Circle</button>
+					<button type="button" class="btn btn-default btn-chooseShape">Ellipse</button>
+					<button type="button" class="btn btn-default btn-chooseShape">CurvesLine</button>
+					<button type="button" class="btn btn-default btn-chooseShape">CirclePoint</button>
+					<button type="button" class="btn btn-default btn-chooseShape">Polygon</button>
+					<button type="button" class="btn btn-default btn-chooseShape">Polyline</button>
+					<button type="button" class="btn btn-default btn-chooseShape">Text</button>
+				</div>
+			</div>
+			<div class="row">
+				<button type="button" class="btn btn-default btn-saveIt">Save</button>
+				<button type="button" class="btn btn-default btn_import">Import</button>
+			</div>
+			<div class="row">
+				<h6>Selected shape</h6>
+				<textarea id="txtSelectedShapeData" class="form-control" rows="5" cols="200">
+				</textarea>
+			</div>
+			
+		</div>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script type="text/javascript" src="PaintModel.js"></script>
+		<script type="text/javascript" src="PaintModelDrawHandler.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function(){
+				var drawHandler = new PaintModelDrawHandler();
+				$("#cvsMain").css("background-image", "url(http://a4.att.hudong.com/73/78/14300001018588129574789305162_950.jpg)");
+				drawHandler.startDrawShape("#cvsMain", undefined, undefined, undefined, undefined);
+				drawHandler.changeCanvasState(PaintState.MANUAL);
+				
+				drawHandler.currentCreateShapeFunc = function() {
+					return new Rect();
+				};
+				
+				drawHandler.shapeSelectedFunc = function(shape) {
+					shape.strokeWidth = drawHandler.highLightStrokeWidth;
+					shape.strokeStyle = drawHandler.highLightStrokeStyle;
+				};
+				
+				drawHandler.shapeUnselectFunc = function(shape) {
+					shape.strokeWidth = drawHandler.defaultStrokeWidth;
+					shape.strokeStyle = drawHandler.defaultStrokeStyle;
+				};
+				
+				drawHandler.onShapeSelected = function(shape) {
+					$("#txtSelectedShapeData").text(shape ? shape.toString() : "");
+				};
+				
+				drawHandler.onShapeMoving = function(shape) {
+					$("#txtSelectedShapeData").text(shape ? shape.toString() : "");
+				};
+				
+				$(".btn-chooseShape").click(function(){
+					var type = $(this).text();
+					if(type == "选择") {
+						drawHandler.changeCanvasState(PaintState.SELECT);
+					}else{
+						drawHandler.changeCanvasState(PaintState.MANUAL);
+						drawHandler.currentCreateShapeFunc = function() {return eval("new " + type + "()");};
+						drawHandler.clean();
+					}
+				});
+				
+				//test
+				var vLine = new StraightLine();
+				vLine.id = uuid();
+				vLine.beginPoint = new Point(117, 130);
+				vLine.endPoint = new Point(167, 202);
+				drawHandler.addShape(vLine);
+				
+				var rect = new Rect();
+				rect.id = uuid();
+				rect.beginPoint = new Point(217, 130);
+				rect.endPoint = new Point(267, 202);
+				drawHandler.addShape(rect);
+				
+				
+				$(".btn-saveIt").click(function(){
+					for(var index in drawHandler.paintModel.shapes){
+						if(drawHandler.paintModel.shapes[index].getType() == Rect.prototype.type) {
+							drawHandler.paintModel.shapes[index].data = "saved";
+						}
+					}
+				});
+				
+				$(".btn_import").click(function(){
+					drawHandler.SetShapesJson($("#txtSelectedShapeData").val());
+				});
+			});
+		</script>
+	</body>
+</html>
